@@ -2,7 +2,7 @@ from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
 from classes import MASTLIST
 from keyboard import date_keyboard
-from functions import display_data, reservation_date
+from functions import display_data, reservation_date, count_total_signups
 import aiogram.utils.markdown as md
 
 def setup(dp:Dispatcher):
@@ -18,12 +18,14 @@ async def masterlist(m:types.Message):
 async def masterlist_filtered(m:types.Message, state:FSMContext):
     await types.ChatActions.typing()
     async with state.proxy() as data:
-        data = m.text
-        stat_ret = display_data(data)
+        data['Date of Booking'] = m.text
+        stat_ret = display_data(m.text)
+        totalS = count_total_signups(m.text)
     for i in range(len(stat_ret)):
         text = md.text(stat_ret[i])
         await m.answer(text)
+    await state.finish()
     
-    await m.answer(f'There are {len(stat_ret)} personnel participating for the specified date.')
+    await m.answer(f'There are {totalS} personnel participating for the specified date.')
     await m.answer(f'End of search results, please run /start to do anything else.')
 
