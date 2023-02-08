@@ -42,4 +42,4 @@ if __name__ == '__main__':
         )
     else:
         logger.info("Running in Polling Mode")
-        runner.start_poling()
+        runner.start_polling()
