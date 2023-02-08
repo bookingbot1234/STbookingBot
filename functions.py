@@ -188,7 +188,7 @@ def reservation_date():
     reservation_date_time = strpDate + timedelta(days=i+1)
     reservation_date_str = str(reservation_date_time.strftime('%Y-%m-%d'))
     while len(reservation_list) < 5:
-        if if_holiday(reservation_date_str) == False and reservation_date_time.weekday() < 5:
+        if if_holiday(reservation_date_str) == False and reservation_date_time.weekday() < 5 and check_spotsleft(reservation_date_str) > 0 :
             reservation_list.append(reservation_date_str)
             reservation_date_time +=  timedelta(days=i+1)
             reservation_date_str = str(reservation_date_time.strftime('%Y-%m-%d'))
@@ -209,7 +209,6 @@ def check_spotsleft(user_day): #counts total spots left
             R_counter += nVar
     spots_left = A_counter - R_counter
     return spots_left 
-
 
 def count_total_signups(user_day): #counts total spots booked
     results = requests.get(f'{api_url}{BOOKING_TABLE}/?user_field_names=true',headers=HEADERS).json()
