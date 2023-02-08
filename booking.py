@@ -47,13 +47,16 @@ async def booking_checkdate(m:types.Message, state:FSMContext):
     async with state.proxy() as data:
         data['Date of Booking'] = m.text
         spot_no = check_spotsleft(m.text)
-    if spot_no == 0:
-        await m.answer(f'This date is fully booked. Please restart the bot and choose another date.')
-        await state.finish()
-    else:
-        await ADD_BOOKING.ADD_COUNT.set()
-        await m.answer(f'There are {spot_no} slots available for this date.')
-        await m.answer(f'How many slots do you want to book?', reply_markup=ReplyKeyboardRemove())
+        if m.text == "Cancel Booking":
+            await cancel_book(m, state)
+        else:
+            if spot_no == 0:
+                await m.answer(f'This date is fully booked. Please restart the bot and choose another date.')
+                await state.finish()
+            else:
+                await ADD_BOOKING.ADD_COUNT.set()
+                await m.answer(f'There are {spot_no} slots available for this date.')
+                await m.answer(f'How many slots do you want to book?', reply_markup=ReplyKeyboardRemove())
 
 async def booking_addcount(m:types.Message, state:FSMContext):
     await types.ChatActions.typing()
@@ -71,39 +74,51 @@ async def booking_addname(m:types.Message, state:FSMContext):
     await types.ChatActions.typing()
     async with state.proxy() as data:
         data['Name'] = m.text
-    await ADD_BOOKING.ADD_RANK.set()
-    await m.answer(f'What is your rank?', reply_markup=rank_keyboard())
+        if m.text == "Cancel Booking":
+            await cancel_book(m, state)
+        else:
+            await ADD_BOOKING.ADD_RANK.set()
+            await m.answer(f'What is your rank?', reply_markup=rank_keyboard())
 
 async def booking_addrank(m:types.Message, state:FSMContext):
     await types.ChatActions.typing()
     async with state.proxy() as data:
         data['Rank'] = m.text
-    await ADD_BOOKING.ADD_HUB.set()
-    await m.answer(f'Which hub are you from?', reply_markup=hub_keyboard())
+        if m.text == "Cancel Booking":
+            await cancel_book(m, state)
+        else:
+            await ADD_BOOKING.ADD_HUB.set()
+            await m.answer(f'Which hub are you from?', reply_markup=hub_keyboard())
     
 async def booking_addhub(m:types.Message, state:FSMContext):
     await types.ChatActions.typing()
     async with state.proxy() as data:
         data['Hub'] = m.text
-        if m.text == "HQ TPT":
-            keyboard = HQTPT_keyboard()
-        elif m.text == "1 TPT":
-            keyboard = first_coy_keyboard()
-        elif m.text == "3 TPT":
-            keyboard = third_coy_keyboard()
-        elif m.text == "WEST":
-            keyboard = west_coy_keyboard()
-        elif m.text == "EAST":
-            keyboard = east_coy_keyboard()
-    await ADD_BOOKING.ADD_COY.set()
-    await m.answer(f'From which coy/node?', reply_markup=keyboard) #check here if need the ()
+        if m.text == "Cancel Booking":
+            await cancel_book(m, state)
+        else:
+            if m.text == "HQ TPT":
+                keyboard = HQTPT_keyboard()
+            elif m.text == "1 TPT":
+                keyboard = first_coy_keyboard()
+            elif m.text == "3 TPT":
+                keyboard = third_coy_keyboard()
+            elif m.text == "WEST":
+                keyboard = west_coy_keyboard()
+            elif m.text == "EAST":
+                keyboard = east_coy_keyboard()
+            await ADD_BOOKING.ADD_COY.set()
+            await m.answer(f'From which coy/node?', reply_markup=keyboard) #check here if need the ()
 
 async def booking_addcoy(m:types.Message, state:FSMContext):
     await types.ChatActions.typing()
     async with state.proxy() as data:
-        data['Company'] = m.text
-    await ADD_BOOKING.ADD_CONTACT.set()
-    await m.answer(f'What is your phone number?', reply_markup=ReplyKeyboardRemove())
+        if m.text == "Cancel Booking":
+            await cancel_book(m, state)
+        else:
+            data['Company'] = m.text
+            await ADD_BOOKING.ADD_CONTACT.set()
+            await m.answer(f'What is your phone number?', reply_markup=ReplyKeyboardRemove())
 
 async def booking_addcontact(m:types.Message, state:FSMContext):
     await types.ChatActions.typing()
