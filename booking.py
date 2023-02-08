@@ -7,14 +7,16 @@ import logging
 from functions import reservation_date, check_spotsleft, get_booking_by_id, remove_booking
 from classes import ADD_BOOKING, RMV_BOOKING
 from functions import submit_booking
-from keyboard import rank_keyboard, coy_keyboard, date_keyboard, confirmation_keyboard, client_keyboard, rmv_kb
+from keyboard import rank_keyboard, date_keyboard, confirmation_keyboard, client_keyboard, rmv_kb, hub_keyboard, east_coy_keyboard, west_coy_keyboard, third_coy_keyboard, first_coy_keyboard, HQTPT_keyboard
 
 def setup(dp:Dispatcher):
     dp.register_message_handler(booking, text='Make Booking')
     dp.register_message_handler(cancel_book, commands='cancel', state=ADD_BOOKING.all_states) 
     dp.register_message_handler(booking_checkdate, state=ADD_BOOKING.ADD_DATE)
+    dp.register_message_handler(booking_addcount, state=ADD_BOOKING.ADD_COUNT)
     dp.register_message_handler(booking_addname, state=ADD_BOOKING.ADD_NAME)
     dp.register_message_handler(booking_addrank, state=ADD_BOOKING.ADD_RANK)
+    dp.register_message_handler(booking_addhub, state=ADD_BOOKING.ADD_HUB)
     dp.register_message_handler(booking_addcoy, state=ADD_BOOKING.ADD_COY)
     dp.register_message_handler(booking_addcontact, state=ADD_BOOKING.ADD_CONTACT)
     dp.register_message_handler(booking_end, state=ADD_BOOKING.ADD_RESP)
@@ -49,9 +51,21 @@ async def booking_checkdate(m:types.Message, state:FSMContext):
         await m.answer(f'This date is fully booked. Please restart the bot and choose another date.')
         await state.finish()
     else:
-        await ADD_BOOKING.ADD_NAME.set()
+        await ADD_BOOKING.ADD_COUNT.set()
         await m.answer(f'There are {spot_no} slots available for this date.')
-        await m.answer(f'Please enter your FULL NAME to proceed with booking.', reply_markup=ReplyKeyboardRemove())
+        await m.answer(f'How many slots do you want to book?', reply_markup=ReplyKeyboardRemove())
+
+async def booking_addcount(m:types.Message, state:FSMContext):
+    await types.ChatActions.typing()
+    async with state.proxy() as data:
+        data['Count'] = m.text
+        spot_eligibility = check_spotsleft(data['Date of Booking'])
+    if spot_eligibility < int(data['Count']):
+        await m.answer(f'There are insufficient slots for your preferred booking date. Please restart the bot and try again.')
+        await state.finish()
+    else:
+        await ADD_BOOKING.ADD_NAME.set()
+        await m.answer(f'Please enter your FULL name.', reply_markup=ReplyKeyboardRemove())
 
 async def booking_addname(m:types.Message, state:FSMContext):
     await types.ChatActions.typing()
@@ -59,13 +73,30 @@ async def booking_addname(m:types.Message, state:FSMContext):
         data['Name'] = m.text
     await ADD_BOOKING.ADD_RANK.set()
     await m.answer(f'What is your rank?', reply_markup=rank_keyboard())
-    
+
 async def booking_addrank(m:types.Message, state:FSMContext):
     await types.ChatActions.typing()
     async with state.proxy() as data:
         data['Rank'] = m.text
+    await ADD_BOOKING.ADD_HUB.set()
+    await m.answer(f'Which hub are you from?', reply_markup=hub_keyboard())
+    
+async def booking_addhub(m:types.Message, state:FSMContext):
+    await types.ChatActions.typing()
+    async with state.proxy() as data:
+        data['Hub'] = m.text
+        if m.text == "HQ TPT":
+            keyboard = HQTPT_keyboard()
+        elif m.text == "1 TPT":
+            keyboard = first_coy_keyboard()
+        elif m.text == "3 TPT":
+            keyboard = third_coy_keyboard()
+        elif m.text == "WEST":
+            keyboard = west_coy_keyboard()
+        elif m.text == "EAST":
+            keyboard = east_coy_keyboard()
     await ADD_BOOKING.ADD_COY.set()
-    await m.answer(f'From which coy/node?', reply_markup=coy_keyboard())
+    await m.answer(f'From which coy/node?', reply_markup=keyboard) #check here if need the ()
 
 async def booking_addcoy(m:types.Message, state:FSMContext):
     await types.ChatActions.typing()
@@ -80,23 +111,25 @@ async def booking_addcontact(m:types.Message, state:FSMContext):
         data['Contact'] = m.text
     msg_text = md.text(md.text('Name: ', md.code(data['Name'])),
                    md.text('Rank: ', md.code(data['Rank'])),
+                   md.text('Hub: ', md.code(data['Hub'])),
                    md.text('Company: ', md.code(data['Company'])),
                    md.text('Contact: ', md.code(data['Contact'])),
                    md.text('Date Selected: ', md.code(data['Date of Booking'])),
+                   md.text('Number of Slots: ', md.code(data['Count'])),
                    sep = '\n')
     msg_text_new = msg_text.replace("`", "")
     msg_text_new1 = msg_text_new.replace("\\", "")
     await ADD_BOOKING.ADD_RESP.set()
     await m.answer(f'{msg_text_new1}')
     await m.answer(f'Please confirm that your details are correct.', reply_markup=confirmation_keyboard())
-#booking end needs work
+
 async def booking_end(m:types.Message, state:FSMContext):
     if m.text == "✅":
         await types.ChatActions.typing()
         async with state.proxy() as data:
             try:
                 user_id = m.from_user.id
-                status_item = submit_booking(data['Name'], data['Rank'], data['Company'], data['Contact'], data['Date of Booking'], user_id)
+                status_item = submit_booking(data['Name'], data['Rank'], data['Hub'], data['Company'], data['Contact'], data['Date of Booking'], data['Count'], user_id)
                 await state.finish()
                 await m.reply(f'Successfully booked!', reply_markup=client_keyboard())
             except Exception as err:
