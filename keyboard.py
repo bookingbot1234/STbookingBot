@@ -22,6 +22,7 @@ def rank_keyboard():
     markup.add("1SG")
     markup.add("SSG")
     markup.add("MSG")
+    markup.add("Cancel Booking")
     return markup
 
 
@@ -32,11 +33,13 @@ def hub_keyboard():
     markup.add("3 TPT")
     markup.add("WEST")
     markup.add("EAST")
+    markup.add("Cancel Booking")
     return markup
 
 def HQTPT_keyboard():
     markup = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=False)
     markup.add("HQ TPT")
+    markup.add("Cancel Booking")
     return markup
 
 def first_coy_keyboard():
@@ -49,6 +52,7 @@ def first_coy_keyboard():
     markup.add("KHATIB")
     markup.add("KRANJI")
     markup.add("LTC")
+    markup.add("Cancel Booking")
     return markup
 
 def third_coy_keyboard():
@@ -60,6 +64,7 @@ def third_coy_keyboard():
     markup.add("CHANGI")
     markup.add("TUAS")
     markup.add("CLEMENTI")
+    markup.add("Cancel Booking")
     return markup
 
 def east_coy_keyboard():
@@ -70,6 +75,7 @@ def east_coy_keyboard():
     markup.add("NEE SOON")
     markup.add("BEDOK")
     markup.add("TEKONG")
+    markup.add("Cancel Booking")
     return markup
 
 def west_coy_keyboard():
@@ -79,6 +85,7 @@ def west_coy_keyboard():
     markup.add("KEAT HONG")
     markup.add("PASIR LABA")
     markup.add("SUNGEI GEDONG")
+    markup.add("Cancel Booking")
     return markup
 
 
@@ -100,6 +107,7 @@ def date_keyboard(reservationList:list):
     markup.add(reservationList[2])
     markup.add(reservationList[3])
     markup.add(reservationList[4])
+    markup.add("Cancel Booking")
     return markup
  
  
