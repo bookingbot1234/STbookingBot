@@ -47,57 +47,101 @@ def rank_db_id(rank):
     rank_val = 0
     if rank == "PTE":
         rank_val = 412009
-        return rank_val
     elif rank == "LCP":
         rank_val = 412010
-        return rank_val
     elif rank == "CPL":
         rank_val = 412011
-        return rank_val
     elif rank == "3SG":
         rank_val = 412012
-        return rank_val
     elif rank == "2SG":
         rank_val = 412013
-        return rank_val
     elif rank == "1SG":
         rank_val = 412014
-        return rank_val
     elif rank == "SSG":
         rank_val = 412015
-        return rank_val
     elif rank == "MSG":
         rank_val = 412016
-        return rank_val
+    elif rank == "CFC":
+        rank_val = 416022
+    return rank_val
+
+def hub_db_id(hub):
+    hub_val = 0
+    if hub == "HQ TPT":
+        hub_val = 415990
+    elif hub == "1 TPT":
+        hub_val = 415991
+    elif hub == "3 TPT":
+        hub_val = 415992
+    elif hub == "WEST":
+        hub_val = 415993
+    elif hub == "EAST":
+        hub_val = 415994
+    return hub_val
     
 def coy_db_id(coy):
     coy_val = 0
+    if coy == "1TPT HQ":
+        coy_val = 415995
     if coy == "ALPHA":
         coy_val = 412017
-        return coy_val
     elif coy == "CHARLIE":
         coy_val = 412018
-        return coy_val
     elif coy == "HMCT":
         coy_val = 412019
-        return coy_val
     elif coy == "MANDAI":
         coy_val = 412020
-        return coy_val
-    elif coy == "KHATIB":
-        coy_val = 412021
-        return coy_val
     elif coy == "KRANJI":
+        coy_val = 412021
+    elif coy == "KHATIB":
         coy_val = 412022
-        return coy_val
     elif coy == "LTC":
         coy_val = 412023
-        return coy_val
+    elif coy == "HQ TPT":
+        coy_val = 415996
+    elif coy == "3TPT HQ":
+        coy_val = 415997
+    elif coy == "AIR TERMINAL":
+        coy_val = 415998
+    elif coy == "SEA TERMINAL":
+        coy_val = 416025
+    elif coy == "LARC V":
+        coy_val = 415999
+    elif coy == "CHANGI":
+        coy_val = 416000
+    elif coy == "TUAS":
+        coy_val = 416001
+    elif coy == "CLEMENTI":
+        coy_val = 416002
+    elif coy == "SELARANG":
+        coy_val = 416003
+    elif coy == "SELETAR":
+        coy_val = 416004
+    elif coy == "NEE SOON":
+        coy_val = 416005
+    elif coy == "BEDOK":
+        coy_val = 416006
+    elif coy == "TEKONG":
+        coy_val = 416007
+    elif coy == "JURONG":
+        coy_val = 416009
+    elif coy == "KEAT HONG":
+        coy_val = 416008
+    elif coy == "PASIR LABA":
+        coy_val = 416010
+    elif coy == "SUNGEI GEDONG":
+        coy_val = 416011
+    elif coy == "WEST HQ":
+        coy_val = 416170
+    elif coy == "EAST HQ":
+        coy_val = 416171
+    return coy_val
 
-def submit_booking(name, rank2, coy2, contact, date, tele_id:int):
+def submit_booking(name, rank2, hub, coy2, contact, date, count:int, tele_id:int):
     try:
         company_id = coy_db_id(coy2)
         rank_id = rank_db_id(rank2)
+        hub_id = hub_db_id(hub)
         submission = requests.post(
         "https://api.baserow.io/api/database/rows/table/136953/?user_field_names=true",
         headers={
@@ -110,7 +154,9 @@ def submit_booking(name, rank2, coy2, contact, date, tele_id:int):
             "Date of Booking": date,
             "Rank": rank_id,
             "Contact": contact,
-            "Telegram ID": tele_id
+            "Telegram ID": tele_id,
+            "Count": count,
+            "Hub": hub_id
         }
     )
     except Exception as err:
@@ -151,23 +197,38 @@ def reservation_date():
             reservation_date_str = str(reservation_date_time.strftime('%Y-%m-%d'))
     return(reservation_list)
 
-def check_spotsleft(user_day):
+def check_spotsleft(user_day): #counts total spots left
     results = requests.get(f'{api_url}{BOOKING_TABLE}/?user_field_names=true',headers=HEADERS).json()
     A_counter = 20
     R_counter = 0
+    nVar = 0
     spots_left = 20
     for item in results['results']:
         if user_day == str(item['Date of Booking']):
-            R_counter +=1
-            spots_left = A_counter - R_counter
-    return spots_left  
+            nVar = int(item['Count'])
+            R_counter += nVar
+    spots_left = A_counter - R_counter
+    return spots_left 
+
+
+def count_total_signups(user_day): #counts total spots booked
+    results = requests.get(f'{api_url}{BOOKING_TABLE}/?user_field_names=true',headers=HEADERS).json()
+    R_counter = 0
+    nVar = 0
+    for item in results['results']:
+        if user_day == str(item['Date of Booking']):
+            nVar = int(item['Count'])
+            R_counter += nVar
+    return R_counter
 
 def display_data(the_date):
     results = requests.get(f'{api_url}{BOOKING_TABLE}/?user_field_names=true',headers=HEADERS).json()
     name_list = []
     rank_list = []
+    hub_list = []
     company_list = []
     date_list = []
+    count_list = []
     contact_list = []
     id_list = []
     final_list = []
@@ -177,11 +238,14 @@ def display_data(the_date):
             itemise = requests.get(f'{api_url}{BOOKING_TABLE}/{row_id}/?user_field_names=true',headers=HEADERS).json()
             name_list.append(itemise['Name'])
             rank_list.append(itemise['Rank']['value'])
+            hub_list.append(itemise['Hub']['value'])
             company_list.append(itemise['Company']['value'])
             date_list.append(itemise['Date of Booking'])
+            count_list.append(itemise['Count']) #but this returns total... dafaq
             contact_list.append(itemise['Contact'])
             id_list.append(itemise['Telegram ID'])
     for i in range (len(name_list)):
-        test01 = "Name: "+name_list[i]+"\nRank: "+rank_list[i]+"\nCompany: "+company_list[i]+"\nDate of Booking: "+date_list[i]+"\nContact: "+contact_list[i]+"\nTelegram ID: "+id_list[i]
+        test01 = "Name: "+name_list[i]+"\nRank: "+rank_list[i]+"\Hub: "+hub_list[i]+"\nCompany: "+company_list[i]+"\nDate of Booking: "+date_list[i]+"\nCount: "+count_list[i]+"\nContact: "+contact_list[i]+"\nTelegram ID: "+id_list[i]
         final_list.append(test01)
     return final_list
+display_data("2023-02-07")
