@@ -9,6 +9,7 @@ from config import BOT_TOKEN, BASEROW_TOKEN, WEBHOOK, WEBHOOK_PATH, WEBHOOK_URL
 import start
 import booking   
 import adminpage
+import healthcheck
 
 tele_api = BOT_TOKEN
 br_api = BASEROW_TOKEN
@@ -36,6 +37,7 @@ if __name__ == '__main__':
             webhook_path=f"/{WEBHOOK_PATH}",
             web_app = app
         )
+        healthcheck.setup(runner)
         runner.run_app(
             host="0.0.0.0",
             port=5000
